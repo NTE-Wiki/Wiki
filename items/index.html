@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>物品数据库</title>
+    <title>NTE Wiki 》items DB | 异环Wiki 》物品数据库</title>
     <!-- 引入 PapaParse 解析 CSV -->
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     <style>
@@ -71,7 +71,7 @@
 
         .content-area {
             flex: 1;
-            min-width: 0; /* 绝对核心：防止Flex子项溢出撑爆布局 */
+            min-width: 0;
             box-sizing: border-box;
         }
 
@@ -134,7 +134,7 @@
             opacity: 0.8;
         }
 
-        /* 6 大主选单 */
+        /* 主选单 */
         .master-tabs {
             display: flex;
             flex-wrap: wrap;
@@ -195,7 +195,7 @@
             opacity: 0.9;
         }
 
-        /* 核心：参考 SchaleDB 响应式网格流（auto-fill 配合 minmax，完美根据视口流式换行，绝不卡死单列） */
+        /* 响应式网格流，auto-fill 配合 minmax */
         .grid-container {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(142px, 1fr));
@@ -320,10 +320,10 @@
             word-break: break-all;
         }
 
-        /* 响应式断点：参考 SchaleDB 在平板及小屏时的自适应折叠规则 */
+        /* 响应式断点：自适应折叠规则，屏幕较小时侧边栏移到上方 */
         @media (max-width: 1100px) {
             .main-layout {
-                flex-direction: column; /* 屏幕较小时侧边栏移到上方 */
+                flex-direction: column;
             }
             .sidebar {
                 flex: none;
@@ -334,18 +334,43 @@
                 width: 100%;
             }
         }
-
+         /* 移动端适配，适当调大全局基础字号，控件整体放大 */
         @media (max-width: 768px) {
             body {
                 margin: 10px;
+                font-size: 16px;
             }
             .filter-card {
-                padding: 15px;
+                padding: 20px;
                 border-radius: 16px;
             }
             .top-bar {
                 flex-direction: column;
-                gap: 8px;
+                gap: 12px;
+            }
+            .search-input {
+                font-size: 16px;
+                padding: 14px 20px;
+            }
+            .theme-toggle-btn, .sort-btn {
+                font-size: 16px;
+                padding: 12px 16px;
+            }
+            .tab-btn {
+                font-size: 15px;
+                padding: 10px 16px;
+            }
+            .tag-btn {
+                font-size: 15px;
+                padding: 10px 16px;
+            }
+            .character-select {
+                font-size: 16px;
+                padding: 10px 16px;
+            }
+            .clear-btn {
+                font-size: 15px;
+                padding: 14px;
             }
             .search-input, .theme-toggle-btn, .sort-btn {
                 width: 100%;
@@ -354,7 +379,7 @@
                 justify-content: center;
             }
             .grid-container {
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* 移动端平滑自适应流式网格 */
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
                 gap: 10px;
             }
         }
@@ -373,7 +398,7 @@
                     <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()">🌙 暗黑模式</button>
                 </div>
 
-                <!-- 6 大主选单 -->
+                <!-- 主选单 -->
                 <div class="master-tabs" id="masterTabs">
                     <button class="tab-btn active" onclick="switchMasterTab('礼物')">🎁 礼物</button>
                     <button class="tab-btn" onclick="switchMasterTab('家装')">🪑 家装</button>
