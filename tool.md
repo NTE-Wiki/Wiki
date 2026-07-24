@@ -3,9 +3,6 @@
 异环（NTE）的一些实用工具
 
 ## 应用程序
-**ok-nte** 【[项目地址]( )】  【[下载地址]( )】   
-**maa-nte** 【[项目地址]( )】  【[下载地址]( )】     
-**薄荷小助手** 【[项目地址]( )】  【[下载地址]( )】  
-
-## WebPages
-[等](https://)   
+**ok-nte** 【[项目地址](https://github.com/BnanZ0/ok-nte)】  【[下载地址](https://github.com/BnanZ0/ok-nte/releases/latest)】   
+**maa-nte** 【[项目地址](https://github.com/1bananachicken/MaaNTE)】  【[下载地址](https://github.com/1bananachicken/MaaNTE/releases/latest)】     
+**薄荷小助手** 【[项目地址](https://docs.qq.com/doc/DTkNUTG5tY0ZacUZB)】  【[下载地址](https://docs.qq.com/doc/DTkNUTG5tY0ZacUZB)】  
