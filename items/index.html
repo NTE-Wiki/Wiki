@@ -104,7 +104,7 @@
             outline: none;
             box-sizing: border-box;
         }
-        .character-select {
+        .character-select, .food-series-select, .home-series-select {
             background: var(--input-bg);
             color: var(--text-color);
             border: 1px solid var(--input-border);
@@ -117,7 +117,7 @@
             box-sizing: border-box;
         }
 
-        .theme-toggle-btn, .sort-btn {
+        .filter-toggle-btn, .theme-toggle-btn, .sort-btn {
             background: var(--btn-bg);
             color: var(--text-color);
             border: none;
@@ -131,7 +131,7 @@
             align-items: center;
             gap: 6px;
         }
-        .theme-toggle-btn:hover, .sort-btn:hover {
+        .filter-toggle-btn:hover, .theme-toggle-btn:hover, .sort-btn:hover {
             opacity: 0.8;
         }
 
@@ -229,6 +229,59 @@
             margin-bottom: 10px;
         }
         .item-name { font-weight: bold; font-size: 15px; margin-bottom: 6px; text-align: center; color: var(--text-color); width: 100%; word-break: break-all; }
+        /* 修改后的 .item-name 容器 */
+        .item-name { 
+            font-weight: bold; 
+            font-size: 15px; 
+            margin-bottom: 6px; 
+            text-align: center; 
+            color: var(--text-color); 
+            width: 100%; 
+            
+            /* 单行滚动核心设置 */
+            white-space: nowrap;          /* 强制不换行 */
+            overflow: hidden;             /* 隐藏超出容器的部分 */
+            box-sizing: border-box;
+            padding: 0 4px;
+        }
+
+        /* 内部文本承载元素 */
+        .item-name-inner {
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        /* 自动平滑滚动 keyframes */
+        @keyframes text-scroll {
+            0%, 20% {
+                transform: translateX(0); /* 前 20% 时间在起点停留，方便阅读开头 */
+            }
+            80%, 100% {
+                /* 向左滚动超出部分 */
+                transform: translateX(calc(-100% + 100%)); 
+            }
+        }
+
+        /* 当文字超长添加 scroll 类时激活动画 */
+        .item-name-inner.scroll {
+            /* calc(-100% + 100%) 需要依靠偏移定位，建议用下面这个更简洁稳妥的 keyframes */
+            animation: text-scroll-left 5s linear infinite alternate;
+        }
+
+        /* 更精确的左右往复滚动 Keyframes */
+        @keyframes text-scroll-left {
+            0%, 20% {
+                transform: translateX(0);
+            }
+            80%, 100% {
+                transform: translateX(var(--scroll-offset, -50%));
+            }
+        }
+
+        /* 鼠标悬停在卡片上时暂停动画 */
+        .item-card:hover .item-name-inner {
+            animation-play-state: paused;
+        }
         .item-attr { font-size: 12px; color: var(--gray-text); width: 100%; box-sizing: border-box; }
         .item-attr div { margin-bottom: 4px; white-space: pre-line; word-break: break-all; }
         
@@ -394,9 +447,9 @@
         <div class="sidebar">
             <div class="filter-card">
                 <div class="top-bar">
+                    <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()">🌙 切换夜间</button>
+                    <button class="filter-toggle-btn" id="filterToggleBtn" onclick="toggleFilter()">同组筛选: 满足任意</button>
                     <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜索名称、介绍、描述...">
-                    <button class="sort-btn" id="sortBtn" onclick="toggleSort()">📊 价格排序: 默认</button>
-                    <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()">🌙 暗黑模式</button>
                 </div>
 
                 <!-- 主选单 -->
@@ -418,6 +471,7 @@
 
         <!-- 右侧：结果展示区域 -->
         <div class="content-area">
+            <button class="sort-btn" id="sortBtn" onclick="toggleSort()">📊 价格排序: 默认</button>
             <div id="statusText" style="margin-bottom:15px; color:var(--gray-text); font-size: 14px;">正在读取数据库...</div>
             <div class="grid-container" id="cardsContainer"></div>
         </div>
@@ -428,7 +482,7 @@
 <div class="modal-overlay" id="detailModal" onclick="closeModalOnOverlay(event)">
     <div class="modal-content">
         <button class="modal-close-btn" onclick="closeModal()">✕</button>
-        <img class="modal-img" id="modalImg" src="" onerror="this.src='https://via.placeholder.com/80?text=No+Img'">
+        <img class="modal-img" id="modalImg" src="" onerror="this.onerror=null; this.src=fallbackImg;">
         <div class="modal-title" id="modalTitle">物品名称</div>
         <div class="modal-info-list">
             <div class="modal-info-item">
@@ -470,35 +524,40 @@
 
     const FILTER_CONFIGS = {
         '礼物': [
+            { id: '稀有度', name: '稀有度', type: 'rarity_tags', options: ['绿', '蓝', '紫', '金'] },
             { id: '类别', name: '类别', type: 'tags', options: ['道具', '食物', '家装'] },
             { id: '好感', name: '好感', type: 'tags', options: ['50', '100', '200', '300', '400', '2000'] },
             { id: '好感翻倍角色', name: '好感翻倍角色', type: 'character_select' },
-            { id: '标签', name: '其他', type: 'tags', options: ['可购买', '可拾取', '特殊获取', '不可再生'] }
+            { id: '标签', name: '其他', type: 'tags', options: ['可购买', '可拾取', '可偷取', '特殊获取', '不可再生'] }
         ],
         '家装': [
-            { id: '类别', name: '类别', type: 'tags', options: ['家装', '绿植', '唱片机', '鱼缸', '墙壁装饰', '摆件', '异象家具'] },
-            { id: '子类别', name: '子类别', type: 'tags', options: ['沙发', '椅子', '床', '桌子', '柜子', '屏风', '花盆', '花架', '盆栽', '画', '海报', '墙饰', '贴纸', '大手办', '摆件', '工艺品', '乐器', '书', '灯饰', '家庭休闲'] },
             { id: '稀有度', name: '稀有度', type: 'rarity_tags', options: ['绿', '蓝', '紫', '金'] },
-            { id: '角色家具互动', name: '角色家具互动', type: 'character_select' },
-            { id: '标签', name: '其他', type: 'tags', options: ['可购买', '可拾取', '特殊获取', '家具互动', '一咖舍', '手办'] }
+            { id: '家装系列', name: '家装系列', type: 'home_series_select' },
+            { id: '类型', name: '类型', type: 'sub_tags', options: ['家具', '绿植', '唱片机', '鱼缸', '墙壁', '装饰', '手办'] },
+            { id: '子类型', name: '子类型', type: 'sub_tags', options: ['沙发', '椅子', '床', '桌子', '柜子', '屏风', '花盆', '花架', '盆栽', '画', '海报', '墙饰', '贴纸', '大手办', '摆件', '工艺品', '乐器', '书', '灯饰', '家庭休闲'] },
+            { id: '角色特殊互动', name: '角色特殊互动', type: 'character_select' },
+            { id: '标签', name: '其他', type: 'tags', options: ['可购买', '可拾取', '可偷取', '特殊获取', '可互动', '一咖舍'] }
         ],
         '食物': [
-            { id: '加成类型', name: '加成类型', type: 'tags', options: ['百分比', '数值', '一次性', '持续', '混合', '复活', '单体', '全队'] },
-            { id: '加成效果', name: '加成效果', type: 'tags', options: ['生命', '防御', '攻击', '暴击伤害', '暴击率', '体力回复速度', '体力消耗降低'] },
-            { id: '食物系列', name: '食物系列', type: 'tags', options: ['畅爽系列', '2-Four便利店系列', '噗卡糖果系列'] },
             { id: '稀有度', name: '稀有度', type: 'rarity_tags', options: ['绿', '蓝', '紫', '金'] },
-            { id: '标签', name: '其他', type: 'tags', options: ['可购买', '可拾取', '特殊获取', '不可再生'] }
+            { id: '食物系列', name: '食物系列', type: 'food_series_select' },
+            { id: '加成类型', name: '加成类型', type: 'tags', options: ['百分比', '数值', '一次性', '持续', '混合', '复活', '单体', '全队'] },
+            { id: '加成效果', name: '加成效果', type: 'tags', options: ['生命', '防御力', '攻击力', '暴击伤害', '暴击率', '体力回复提速', '体力消耗降低'] },
+            { id: '标签', name: '其他', type: 'tags', options: ['可购买', '可拾取', '可偷取', '特殊获取', '不可再生', '唯一'] }
         ],
         '物料': [
+            { id: '稀有度', name: '稀有度', type: 'rarity_tags', options: ['绿', '蓝', '紫', '金'] },
             { id: '类别', name: '类别', type: 'tags', options: ['肉类', '蔬菜', '水果', '调味', '奶', '其他'] },
             { id: '标签', name: '其他', type: 'tags', options: ['可购买', '可拾取'] }
         ],
         '道具': [
+            { id: '稀有度', name: '稀有度', type: 'rarity_tags', options: ['绿', '蓝', '紫', '金'] },
             { id: '类别', name: '类别', type: 'tags', options: ['重要道具', '养成材料', '异能强化材料', '异能提升材料', '异象家具材料', '空幕卡带用'] },
             { id: '子类别', name: '子类别', type: 'tags', options: ['弧盘材料', '角色材料', '经验材料', '突破材料'] },
             { id: '标签', name: '其他', type: 'tags', options: ['可购买', '可拾取', '可刷取', '特殊获取', '不可再生', '自选类', '失物类', '兑换折扣类'] }
         ],
         '重要物品': [
+            { id: '稀有度', name: '稀有度', type: 'rarity_tags', options: ['绿', '蓝', '紫', '金'] },
             { id: '类别', name: '类别', type: 'tags', options: ['车钥匙', '快捷技能', '任务道具', '监狱道具', '粉爪道具'] },
             { id: '标签', name: '其他', type: 'tags', options: ['不可再生'] }
         ]
@@ -507,8 +566,13 @@
     let allDatabaseData = {};
     let characterList = new Set();
     let favoriteItemCharacters = new Set();
+    let homeseriesList = new Set();
+    let homeseriesItem = new Set();
+    let foodseriesList = new Set();
+    let foodseriesItem = new Set();
     let currentMasterTab = '礼物';
     let searchQuery = '';
+    let fallbackImg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 50 50'><rect width='50' height='50' fill='%23e0e0e0'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='10' fill='%23888888'>No Img</text></svg>";
     let activeFilters = {};
     let sortMode = 0; // 0: 默认, 1: 价格升序, 2: 价格降序
 
@@ -516,29 +580,78 @@
         const savedTheme = localStorage.getItem('theme') || 'light';
         if (savedTheme === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
-            document.getElementById('themeToggleBtn').innerHTML = '☀️ 浅色模式';
+            document.getElementById('themeToggleBtn').innerHTML = '☀️ 切换日间';
         }
 
-        const promises = Object.entries(CSV_FILES).map(([key, filePath]) => {
-            return new Promise((resolve) => {
-                Papa.parse(filePath, {
-                    download: true,
-                    header: true,
-                    skipEmptyLines: true,
-                    complete: (results) => {
-                        allDatabaseData[key] = results.data;
-                        resolve();
-                    },
-                    error: () => {
-                        allDatabaseData[key] = [];
-                        resolve();
-                    }
+        const savedFilter = localStorage.getItem('filter') || 'union';
+        if (savedFilter === 'inter') {
+            document.documentElement.setAttribute('data-filter', 'inter');
+            document.getElementById('filterToggleBtn').innerHTML = '同组筛选: 满足全部';
+        } else {
+            document.documentElement.setAttribute('data-filter', 'union');
+            document.getElementById('filterToggleBtn').innerHTML = '同组筛选: 满足任意';
+        }
+        
+        // 获取 CSV 并自动根据服务器更新状态刷缓存
+        const promises = Object.entries(CSV_FILES).map(async ([key, filePath]) => {
+            try {
+                // 1. 使用 fetch 发送协商请求（文件更新了才下新的，没变就用 304 本地缓存）
+                const response = await fetch(filePath, {
+                    cache: 'no-cache'
                 });
-            });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const csvText = await response.text();
+
+                // 2. 将拿到（或缓存）的文本内容传给 Papa.parse
+                return new Promise((resolve) => {
+                    Papa.parse(csvText, {
+                        header: true,
+                        skipEmptyLines: 'greedy', // 彻底跳过只包含空格/逗号的无效空行
+                        
+                        // 清洗表头：去除 BOM 头以及首尾不可见空格
+                        transformHeader: (header) => {
+                            return header.replace(/^\ufeff/, '').trim();
+                        },
+
+                        complete: (results) => {
+                            // 数据二次清洗：去除字段值首尾空格 & 过滤无效行
+                            const cleanData = results.data.map(row => {
+                                const cleanRow = {};
+                                Object.keys(row).forEach(k => {
+                                    const cleanKey = k.trim();
+                                    const val = row[k];
+                                    cleanRow[cleanKey] = typeof val === 'string' ? val.trim() : val;
+                                });
+                                return cleanRow;
+                            }).filter(row => {
+                                // 必须包含有效的名称字段，才保留该条记录
+                                return row['名称'] && row['名称'] !== '' && row['名称'] !== 'undefined';
+                            });
+
+                            allDatabaseData[key] = cleanData;
+                            resolve();
+                        },
+
+                        error: () => {
+                            allDatabaseData[key] = [];
+                            resolve();
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error(`加载 CSV [${key}] 失败:`, error);
+                allDatabaseData[key] = [];
+            }
         });
 
         await Promise.all(promises);
         extractCharacters();
+        extracthomeSeries();
+        extractfoodSeries();
         switchMasterTab('礼物');
     });
 
@@ -548,14 +661,36 @@
         if (currentTheme === 'dark') {
             document.documentElement.removeAttribute('data-theme');
             localStorage.setItem('theme', 'light');
-            btn.innerHTML = '🌙 暗黑模式';
+            btn.innerHTML = '🌙 切换夜间';
         } else {
             document.documentElement.setAttribute('data-theme', 'dark');
             localStorage.setItem('theme', 'dark');
-            btn.innerHTML = '☀️ 浅色模式';
+            btn.innerHTML = '☀️ 切换日间';
         }
     }
 
+    // 切换按钮触发函数
+    function toggleFilter() {
+        const currentFilter = document.documentElement.getAttribute('data-filter');
+        const btn = document.getElementById('filterToggleBtn');
+
+        if (currentFilter === 'inter') {
+            // 当前是交集 -> 切换为并集
+            document.documentElement.setAttribute('data-filter', 'union');
+            localStorage.setItem('filter', 'union');
+            btn.innerHTML = '同组筛选: 满足任意';
+        } else {
+            // 当前是并集 -> 切换为交集
+            document.documentElement.setAttribute('data-filter', 'inter');
+            localStorage.setItem('filter', 'inter');
+            btn.innerHTML = '同组筛选: 满足全部';
+        }
+
+        // 触发重新筛选与渲染
+        applyFilterLogic();
+    }
+    
+    
     function toggleSort() {
         sortMode = (sortMode + 1) % 3;
         const btn = document.getElementById('sortBtn');
@@ -571,15 +706,30 @@
 
     function splitCellValues(val) {
         if (!val || val === 'null') return [];
-        return val.toString().split(/[\r\n]+/).map(s => s.trim()).filter(Boolean);
+        return val.toString()
+            .split(/[\r\n、|]+/) // 换行符、|
+            .map(s => s.trim())
+            .filter(Boolean);
     }
 
     function extractCharacters() {
         Object.values(allDatabaseData).flat().forEach(row => {
-            ['偏好角色', '角色家具互动'].forEach(col => {
+            ['偏好角色', '角色特殊互动'].forEach(col => {
                 splitCellValues(row[col]).forEach(c => characterList.add(c));
             });
             splitCellValues(row['好感翻倍角色']).forEach(c => favoriteItemCharacters.add(c));
+        });
+    }
+
+    function extractfoodSeries() {
+        Object.values(allDatabaseData).flat().forEach(row => {
+            splitCellValues(row['食物系列']).forEach(s => foodseriesItem.add(s));
+        });
+    }
+
+    function extracthomeSeries() {
+        Object.values(allDatabaseData).flat().forEach(row => {
+            splitCellValues(row['家装系列']).forEach(s => homeseriesItem.add(s));
         });
     }
 
@@ -610,7 +760,7 @@
             const tagsContainer = document.createElement('div');
             tagsContainer.className = 'tags-container';
 
-            if (group.type === 'tags' || group.type === 'rarity_tags') {
+            if (group.type === 'tags' || group.type === 'rarity_tags' || group.type === 'sub_tags') {
                 group.options.forEach(opt => {
                     const btn = document.createElement('button');
                     btn.className = 'tag-btn';
@@ -622,7 +772,31 @@
                 const select = document.createElement('select');
                 select.className = 'character-select';
                 let optionsSource = (group.id === '好感翻倍角色') ? favoriteItemCharacters : characterList;
-                select.innerHTML = `<option value="">全部角色</option>` + 
+                select.innerHTML = `<option value="">未选择角色</option>` + 
+                    Array.from(optionsSource).map(c => `<option value="${c}" ${activeFilters[group.id] && activeFilters[group.id][0] === c ? 'selected' : ''}>${c}</option>`).join('');
+                select.onchange = (e) => {
+                    if (e.target.value) activeFilters[group.id] = [e.target.value];
+                    else delete activeFilters[group.id];
+                    applyFilterLogic();
+                };
+                tagsContainer.appendChild(select);
+            } else if (group.type === 'food_series_select') {
+                const select = document.createElement('select');
+                select.className = 'food-series-select';
+                let optionsSource = (group.id === '食物系列') ? foodseriesItem : foodseriesList;
+                select.innerHTML = `<option value="">未选择系列</option>` + 
+                    Array.from(optionsSource).map(c => `<option value="${c}" ${activeFilters[group.id] && activeFilters[group.id][0] === c ? 'selected' : ''}>${c}</option>`).join('');
+                select.onchange = (e) => {
+                    if (e.target.value) activeFilters[group.id] = [e.target.value];
+                    else delete activeFilters[group.id];
+                    applyFilterLogic();
+                };
+                tagsContainer.appendChild(select);
+            } else if (group.type === 'home_series_select') {
+                const select = document.createElement('select');
+                select.className = 'home-series-select';
+                let optionsSource = (group.id === '家装系列') ? homeseriesItem : homeseriesList;
+                select.innerHTML = `<option value="">未选择系列</option>` + 
                     Array.from(optionsSource).map(c => `<option value="${c}" ${activeFilters[group.id] && activeFilters[group.id][0] === c ? 'selected' : ''}>${c}</option>`).join('');
                 select.onchange = (e) => {
                     if (e.target.value) activeFilters[group.id] = [e.target.value];
@@ -669,21 +843,35 @@
                 }
             });
         }
+
+        // 💡 获取当前的同类标签筛选模式 ('inter' 为交集/AND，否则为并集/OR)
+        const isInterMode = document.documentElement.getAttribute('data-filter') === 'inter';
         
         let filtered = currentData.filter(row => {
+            // 1. 搜索框筛选
             if (searchQuery) {
                 const match = Object.values(row).some(v => v && v.toString().toLowerCase().includes(searchQuery));
                 if (!match) return false;
             }
 
+            // 2. 标签组筛选
             for (let [groupId, valList] of Object.entries(activeFilters)) {
-                const cellValues = splitCellValues(row[groupId] || row['其他'] || row['标签']);
-                const match = valList.some(v => cellValues.includes(v));
+                // 如果该筛选组没有选择任何值，跳过
+                if (!valList || valList.length === 0) continue;
+
+                const cellValues = splitCellValues(row[groupId] || row['其他'] || row['标签'] || row['类型']);
+                
+                // 💡 核心修改点：根据模式决定同组内是“同时满足”还是“满足任意”
+                const match = isInterMode 
+                    ? valList.every(v => cellValues.includes(v))  // 交集模式 (AND): 选中的值必须全部存在
+                    : valList.some(v => cellValues.includes(v));   // 并集模式 (OR):  选中的值只需满足一个
+
                 if (!match) return false;
             }
             return true;
         });
 
+        // 3. 排序逻辑
         if (sortMode !== 0) {
             filtered.sort((a, b) => {
                 let priceA = parseFloat(a['价格']);
@@ -699,6 +887,7 @@
             });
         }
 
+        // 4. 渲染与状态更新
         renderCards(filtered);
         
         let count = 0;
@@ -706,10 +895,14 @@
         document.getElementById('clearBtn').innerText = `🗑️ 清除 ${count} 个过滤器`;
         document.getElementById('statusText').innerText = `【${currentMasterTab}】共有 ${filtered.length} 项`;
     }
-
     function renderCards(data) {
         const container = document.getElementById('cardsContainer');
         container.innerHTML = '';
+
+        const formatAttr = (label, value, prefix = '') => {
+            if (!value || value === 'null' || value === 'undefined') return '';
+            return `<div><b>${label}:</b> ${prefix}${value}</div>`;
+        };
 
         data.forEach(item => {
             const card = document.createElement('div');
@@ -718,15 +911,43 @@
 
             const imgPath = `./assets/images/${item['名称']}.png`;
 
+            let attrHtml = '';
+            if (currentMasterTab === '礼物') {
+                attrHtml = formatAttr('价格', item['价格']) + formatAttr('好感', item['好感'], '+');
+            } else if (currentMasterTab === '家装') {
+                attrHtml = formatAttr('价格', item['价格']) + formatAttr('舒适度', item['舒适度']) + formatAttr('收藏值', item['收藏值']);
+            } else {
+                attrHtml = formatAttr('价格', item['价格']);
+            }
+
+            const itemName = item['名称'] || '未命名';
+            
+
+            // 注意这里的 <span class="item-name-inner"> 包裹
             card.innerHTML = `
-                <img class="item-img" src="${imgPath}" onerror="this.src='https://via.placeholder.com/50?text=No+Img'">
-                <div class="item-name">${item['名称'] || '未命名'}</div>
+                <img class="item-img" src="${imgPath}" onerror="this.onerror=null; this.src='${fallbackImg}';">
+                <div class="item-name">
+                    <span class="item-name-inner">${itemName}</span>
+                </div>
                 <div class="item-attr">
-                    ${item['价格'] && item['价格'] !== 'null' ? `<div><b>价格:</b> ${item['价格']}</div>` : ''}
-                    ${item['好感'] && item['好感'] !== 'null' ? `<div><b>好感:</b> +${item['好感']}</div>` : ''}
+                    ${attrHtml}
                 </div>
             `;
+
             container.appendChild(card);
+
+            // 💡 动态检测并计算精确滚动距离
+            const nameContainer = card.querySelector('.item-name');
+            const nameInner = card.querySelector('.item-name-inner');
+
+            const overflowWidth = nameInner.offsetWidth - nameContainer.clientWidth;
+            
+            // 如果文字宽度超过了外层容器，开启滚动并传入精准偏移量
+            if (overflowWidth > 0) {
+                // 计算需要往左滚动的像素值 (留 4px 余量)
+                nameInner.style.setProperty('--scroll-offset', `-${overflowWidth + 4}px`);
+                nameInner.classList.add('scroll');
+            }
         });
     }
 
