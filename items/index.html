@@ -454,12 +454,13 @@
 
                 <!-- 主选单 -->
                 <div class="master-tabs" id="masterTabs">
-                    <button class="tab-btn active" onclick="switchMasterTab('礼物')">🎁 礼物</button>
-                    <button class="tab-btn" onclick="switchMasterTab('家装')">🪑 家装</button>
-                    <button class="tab-btn" onclick="switchMasterTab('食物')">🍱 食物</button>
-                    <button class="tab-btn" onclick="switchMasterTab('物料')">🥬 物料</button>
-                    <button class="tab-btn" onclick="switchMasterTab('道具')">🎒 道具</button>
-                    <button class="tab-btn" onclick="switchMasterTab('重要物品')">🔑 重要物品</button>
+                    <button class="tab-btn active" onclick="switchMasterTab('全部')">全部</button>
+                    <button class="tab-btn" onclick="switchMasterTab('礼物')">🎁礼物</button>
+                    <button class="tab-btn" onclick="switchMasterTab('道具')">道具</button>
+                    <button class="tab-btn" onclick="switchMasterTab('物料')">物料</button>
+                    <button class="tab-btn" onclick="switchMasterTab('食物')">食物</button>
+                    <button class="tab-btn" onclick="switchMasterTab('家装')">家装</button>
+                    <button class="tab-btn" onclick="switchMasterTab('重要物品')">重要物品</button>
                 </div>
 
                 <!-- 动态属性选项 -->
@@ -514,6 +515,7 @@
     };
 
     const CATEGORY_MAPPING = {
+        '全部': ['道具礼物', '道具非礼物', '食物礼物', '食物非礼物', '家具礼物', '家具非礼物', '物料', '重要物品'],
         '礼物': ['道具礼物', '食物礼物', '家具礼物'],
         '道具': ['道具礼物', '道具非礼物'],
         '家装': ['家具礼物', '家具非礼物'],
@@ -523,6 +525,11 @@
     };
 
     const FILTER_CONFIGS = {
+        '全部': [
+            { id: '稀有度', name: '稀有度', type: 'rarity_tags', options: ['绿', '蓝', '紫', '金'] },
+            { id: '类别', name: '类别', type: 'tags', options: ['礼物', '道具', '食物', '家装', '物料', '重要物品'] },
+            { id: '标签', name: '其他', type: 'tags', options: ['可购买', '特殊获取', '不可再生', '唯一'] }
+        ],
         '礼物': [
             { id: '稀有度', name: '稀有度', type: 'rarity_tags', options: ['绿', '蓝', '紫', '金'] },
             { id: '类别', name: '类别', type: 'tags', options: ['道具', '食物', '家装'] },
@@ -534,7 +541,7 @@
             { id: '稀有度', name: '稀有度', type: 'rarity_tags', options: ['绿', '蓝', '紫', '金'] },
             { id: '家装系列', name: '家装系列', type: 'home_series_select' },
             { id: '类型', name: '类型', type: 'sub_tags', options: ['家具', '绿植', '唱片机', '鱼缸', '墙壁', '装饰', '手办'] },
-            { id: '子类型', name: '子类型', type: 'sub_tags', options: ['沙发', '椅子', '床', '桌子', '柜子', '屏风', '花盆', '花架', '盆栽', '画', '海报', '墙饰', '贴纸', '大手办', '摆件', '工艺品', '乐器', '书', '灯饰', '家庭休闲'] },
+            { id: '类型', name: '子类型', type: 'sub_tags', options: ['沙发', '椅子', '床', '桌子', '柜子', '屏风', '花盆', '花架', '盆栽', '画', '海报', '墙饰', '贴纸', '大手办', '摆件', '工艺品', '乐器', '书', '灯饰', '家庭休闲'] },
             { id: '角色特殊互动', name: '角色特殊互动', type: 'character_select' },
             { id: '标签', name: '其他', type: 'tags', options: ['可购买', '可拾取', '可偷取', '特殊获取', '可互动', '一咖舍'] }
         ],
@@ -570,7 +577,7 @@
     let homeseriesItem = new Set();
     let foodseriesList = new Set();
     let foodseriesItem = new Set();
-    let currentMasterTab = '礼物';
+    let currentMasterTab = '全部';
     let searchQuery = '';
     let fallbackImg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 50 50'><rect width='50' height='50' fill='%23e0e0e0'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='10' fill='%23888888'>No Img</text></svg>";
     let activeFilters = {};
@@ -652,7 +659,7 @@
         extractCharacters();
         extracthomeSeries();
         extractfoodSeries();
-        switchMasterTab('礼物');
+        switchMasterTab('全部');
     });
 
     function toggleTheme() {
