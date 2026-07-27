@@ -539,11 +539,23 @@
         ],
         '家装': [
             { id: '稀有度', name: '稀有度', type: 'rarity_tags', options: ['绿', '蓝', '紫', '金'] },
+            { id: '规格', name: '规格', type: 'size_tags', options: ['S', 'M', 'L'] },
+            { id: '类型', name: '类型', type: 'tags', options: ['家具', '园艺', '唱片机', '养鱼', '墙壁', '装饰', '手办','一咖舍'] },
+            { id: '子类型', name: '子类型', type: 'sub_tags', 
+                options: {
+                    '家具': ['沙发', '椅子', '床', '桌子', '柜子', '屏风'],
+                    '园艺': ['花盆', '花瓶', '花架', '盆栽', '花艺'],
+                    '唱片机': [],
+                    '养鱼': ['鱼缸', '鱼缸造景'],
+                    '墙壁': ['画', '海报', '墙饰', '贴纸'],
+                    '装饰': ['大手办', '摆件', '工艺品','乐器', '书', '灯饰', '家庭休闲'],
+                    '手办': ['手办','大手办'],
+                    '一咖舍': ['桌子', '画', '海报', '贴纸', '手办']
+                }
+            },
             { id: '家装系列', name: '家装系列', type: 'home_series_select' },
-            { id: '类型', name: '类型', type: 'sub_tags', options: ['家具', '绿植', '唱片机', '鱼缸', '墙壁', '装饰', '手办'] },
-            { id: '类型', name: '子类型', type: 'sub_tags', options: ['沙发', '椅子', '床', '桌子', '柜子', '屏风', '花盆', '花架', '盆栽', '画', '海报', '墙饰', '贴纸', '大手办', '摆件', '工艺品', '乐器', '书', '灯饰', '家庭休闲'] },
             { id: '角色特殊互动', name: '角色特殊互动', type: 'character_select' },
-            { id: '标签', name: '其他', type: 'tags', options: ['可购买', '可拾取', '可偷取', '特殊获取', '可互动', '一咖舍'] }
+            { id: '标签', name: '其他', type: 'tags', options: ['可购买', '可拾取', '可偷取', '不可购买', '特殊获取', '可互动'] }
         ],
         '食物': [
             { id: '稀有度', name: '稀有度', type: 'rarity_tags', options: ['绿', '蓝', '紫', '金'] },
@@ -558,8 +570,9 @@
             { id: '标签', name: '其他', type: 'tags', options: ['可购买', '可拾取'] }
         ],
         '道具': [
+
             { id: '稀有度', name: '稀有度', type: 'rarity_tags', options: ['绿', '蓝', '紫', '金'] },
-            { id: '类别', name: '类别', type: 'tags', options: ['重要道具', '养成材料', '异能强化材料', '异能提升材料', '异象家具材料', '空幕卡带用'] },
+            { id: '类别', name: '类别', type: 'tags', options: ['养鱼道具', '重要道具', '养成材料', '异能强化材料', '异能提升材料', '异象家具材料', '空幕卡带用'] },
             { id: '子类别', name: '子类别', type: 'tags', options: ['弧盘材料', '角色材料', '经验材料', '突破材料'] },
             { id: '标签', name: '其他', type: 'tags', options: ['可购买', '可拾取', '可刷取', '特殊获取', '不可再生', '自选类', '失物类', '兑换折扣类'] }
         ],
@@ -756,6 +769,29 @@
         const configs = FILTER_CONFIGS[currentMasterTab] || [];
 
         configs.forEach(group => {
+            // 💡 1. 级联核心：处理子类型逻辑
+            let currentOptions = group.options;
+
+            if (group.name === '子类型') {
+                const selectedMainTypes = activeFilters['类型'] || [];
+                
+                // 如果未勾选任何“类型”，直接不渲染子类型这一行
+                if (selectedMainTypes.length === 0) return;
+
+                // 根据选中的类型汇总所有可用的子类型（支持在“类型”中多选）
+                let matchedOptions = [];
+                selectedMainTypes.forEach(t => {
+                    if (group.options[t]) matchedOptions.push(...group.options[t]);
+                });
+
+                // 去重
+                currentOptions = [...new Set(matchedOptions)];
+
+                // 如果该类型下没有配置子类型，跳过渲染
+                if (currentOptions.length === 0) return;
+            }
+
+            // 2. DOM 节点构建
             const groupEl = document.createElement('div');
             groupEl.className = 'filter-group';
 
@@ -767,11 +803,18 @@
             const tagsContainer = document.createElement('div');
             tagsContainer.className = 'tags-container';
 
-            if (group.type === 'tags' || group.type === 'rarity_tags' || group.type === 'sub_tags') {
-                group.options.forEach(opt => {
+            // 3. 标签类型按钮渲染
+            if (group.type === 'tags' || group.type === 'rarity_tags' || group.type === 'size_tags' || group.type === 'sub_tags') {
+                currentOptions.forEach(opt => {
                     const btn = document.createElement('button');
-                    btn.className = 'tag-btn';
+                    
+                    // 判断当前 opt 是否已经被选中，补齐 active 样式类
+                    const isSelected = activeFilters[group.id] && activeFilters[group.id].includes(opt);
+                    btn.className = `tag-btn ${isSelected ? 'active' : ''}`;
+                    
                     btn.innerHTML = group.type === 'rarity_tags' ? `<span class="dot dot-${opt}"></span> ${opt}` : opt;
+                    
+                    // 绑定点击事件，将当前按钮 DOM 传入
                     btn.onclick = () => toggleTag(group.id, opt, btn);
                     tagsContainer.appendChild(btn);
                 });
@@ -812,13 +855,13 @@
                 };
                 tagsContainer.appendChild(select);
             }
+
             groupEl.appendChild(tagsContainer);
             container.appendChild(groupEl);
         });
     }
 
     function toggleTag(groupId, val, btn) {
-        btn.classList.toggle('active');
         if (!activeFilters[groupId]) activeFilters[groupId] = [];
         const idx = activeFilters[groupId].indexOf(val);
         if (idx > -1) {
@@ -827,7 +870,39 @@
         } else {
             activeFilters[groupId].push(val);
         }
+
+        // 💡 核心改动：点击“类型”时，处理子类型联动
+        if (groupId === '类型') {
+            cleanInvalidSubTypes();      // 清理原先选中但现在无效的子类型
+            renderDynamicFilters();     // 重新渲染筛选区域（内部会自动重新给 active 按钮加上 active 类）
+        } else {
+            // 普通标签点击，直接切换当前按钮高亮样式
+            btn.classList.toggle('active');
+        }
         applyFilterLogic();
+    }
+
+    function cleanInvalidSubTypes() {
+        if (!activeFilters['子类型']) return;
+
+        const selectedMainTypes = activeFilters['类型'] || [];
+        const subConfig = (FILTER_CONFIGS[currentMasterTab] || []).find(g => g.id === '子类型');
+
+        // 如果主类型被全部取消选择，或者找不到子类型配置，清空已选子类型
+        if (!subConfig || selectedMainTypes.length === 0) {
+            delete activeFilters['子类型'];
+            return;
+        }
+
+        // 汇总当前所有合法子类型选项
+        let validSubOptions = [];
+        selectedMainTypes.forEach(t => {
+            if (subConfig.options[t]) validSubOptions.push(...subConfig.options[t]);
+        });
+
+        // 过滤掉不在合法池中的已选子类型
+        activeFilters['子类型'] = activeFilters['子类型'].filter(sub => validSubOptions.includes(sub));
+        if (!activeFilters['子类型'].length) delete activeFilters['子类型'];
     }
 
     function applyFilterLogic() {
