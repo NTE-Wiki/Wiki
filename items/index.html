@@ -456,10 +456,10 @@
                 <div class="master-tabs" id="masterTabs">
                     <button class="tab-btn active" onclick="switchMasterTab('全部')">全部</button>
                     <button class="tab-btn" onclick="switchMasterTab('礼物')">🎁礼物</button>
-                    <button class="tab-btn" onclick="switchMasterTab('道具')">道具</button>
-                    <button class="tab-btn" onclick="switchMasterTab('物料')">物料</button>
                     <button class="tab-btn" onclick="switchMasterTab('食物')">食物</button>
                     <button class="tab-btn" onclick="switchMasterTab('家装')">家装</button>
+                    <button class="tab-btn" onclick="switchMasterTab('道具')">道具</button>
+                    <button class="tab-btn" onclick="switchMasterTab('物料')">物料</button>
                     <button class="tab-btn" onclick="switchMasterTab('重要物品')">重要物品</button>
                 </div>
 
@@ -559,10 +559,19 @@
         ],
         '食物': [
             { id: '稀有度', name: '稀有度', type: 'rarity_tags', options: ['绿', '蓝', '紫', '金'] },
+            { id: '类型', name: '类型', type: 'tags', options: ['复活', '生命', '防御力', '攻击力', '暴击', '体力'] },
+            { id: '子类型', name: '子类型', type: 'tags', 
+                options: {
+                    '复活': ['百分比', '数值'],
+                    '生命': ['百分比', '数值', '一次性', '持续', '混合', '复活'],
+                    '防御力': [],
+                    '攻击力': [],
+                    '暴击': ['暴击伤害', '暴击率'],
+                    '体力': ['回复提速', '消耗降低'],
+                }
+            },
             { id: '食物系列', name: '食物系列', type: 'food_series_select' },
-            { id: '加成类型', name: '加成类型', type: 'tags', options: ['百分比', '数值', '一次性', '持续', '混合', '复活', '单体', '全队'] },
-            { id: '加成效果', name: '加成效果', type: 'tags', options: ['生命', '防御力', '攻击力', '暴击伤害', '暴击率', '体力回复提速', '体力消耗降低'] },
-            { id: '标签', name: '其他', type: 'tags', options: ['可购买', '可拾取', '可偷取', '特殊获取', '不可再生', '唯一'] }
+            { id: '标签', name: '其他', type: 'tags', options: ['可购买', '可拾取', '可偷取', '特殊获取', '不可再生', '唯一', '单体', '全队'] }
         ],
         '物料': [
             { id: '稀有度', name: '稀有度', type: 'rarity_tags', options: ['绿', '蓝', '紫', '金'] },
@@ -572,14 +581,25 @@
         '道具': [
 
             { id: '稀有度', name: '稀有度', type: 'rarity_tags', options: ['绿', '蓝', '紫', '金'] },
-            { id: '类别', name: '类别', type: 'tags', options: ['养鱼道具', '重要道具', '养成材料', '异能强化材料', '异能提升材料', '异象家具材料', '空幕卡带用'] },
-            { id: '子类别', name: '子类别', type: 'tags', options: ['弧盘材料', '角色材料', '经验材料', '突破材料'] },
-            { id: '标签', name: '其他', type: 'tags', options: ['可购买', '可拾取', '可刷取', '特殊获取', '不可再生', '自选类', '失物类', '兑换折扣类'] }
+            { id: '类型', name: '类型', type: 'tags', options: ['重要道具', '鱼类道具', '养成材料', '异象家具材料', '代币', '礼物', '其他'] },
+            { id: '子类型', name: '子类型', type: 'sub_tags', 
+                options: {
+                    '重要道具': [],
+                    '鱼类道具': ['养鱼道具', '捕鱼道具'],
+                    '养成材料': ['经验', '角色突破', '异能升级', '弧盘突破', '空幕卡带', '自选箱'],
+                    '异象家具材料': [],
+                    '代币': ['货币', '代币', '兑换券', '折扣券'],
+                    '礼物': [],
+                    '其他': ['自选箱','遗失物', '活力'],
+                }
+            },
+            { id: '适用角色', name: '适用角色', type: 'character_select' },
+            { id: '标签', name: '其他', type: 'tags', options: ['可购买', '可拾取', '可刷取', '特殊获取', '不可再生','唯一'] }
         ],
         '重要物品': [
             { id: '稀有度', name: '稀有度', type: 'rarity_tags', options: ['绿', '蓝', '紫', '金'] },
-            { id: '类别', name: '类别', type: 'tags', options: ['车钥匙', '快捷技能', '任务道具', '监狱道具', '粉爪道具'] },
-            { id: '标签', name: '其他', type: 'tags', options: ['不可再生'] }
+            { id: '类别', name: '类别', type: 'tags', options: ['车钥匙', '快捷技能', '任务道具', '监狱道具', '粉爪道具', '抽卡道具'] },
+            { id: '标签', name: '其他', type: 'tags', options: ['不可再生','唯一'] }
         ]
     };
 
@@ -772,7 +792,7 @@
             // 💡 1. 级联核心：处理子类型逻辑
             let currentOptions = group.options;
 
-            if (group.name === '子类型') {
+            if (group.name === '子类型'| group.name === '加成类型') {
                 const selectedMainTypes = activeFilters['类型'] || [];
                 
                 // 如果未勾选任何“类型”，直接不渲染子类型这一行
