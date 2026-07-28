@@ -455,12 +455,14 @@
                 <!-- 主选单 -->
                 <div class="master-tabs" id="masterTabs">
                     <button class="tab-btn active" onclick="switchMasterTab('全部')">全部</button>
-                    <button class="tab-btn" onclick="switchMasterTab('礼物')">🎁礼物</button>
+                    <button class="tab-btn" onclick="switchMasterTab('礼物')">礼物</button>
+                    <button class="tab-btn" onclick="switchMasterTab('道具')">道具</button>
+                    <button class="tab-btn" onclick="switchMasterTab('特殊道具')">特殊道具</button>
                     <button class="tab-btn" onclick="switchMasterTab('食物')">食物</button>
                     <button class="tab-btn" onclick="switchMasterTab('家装')">家装</button>
-                    <button class="tab-btn" onclick="switchMasterTab('道具')">道具</button>
                     <button class="tab-btn" onclick="switchMasterTab('物料')">物料</button>
                     <button class="tab-btn" onclick="switchMasterTab('重要物品')">重要物品</button>
+                    
                 </div>
 
                 <!-- 动态属性选项 -->
@@ -506,6 +508,7 @@
     const CSV_FILES = {
         '道具礼物': './assets/db/props_is_gift.csv',
         '道具非礼物': './assets/db/props_not_gift.csv',
+        '特殊道具': './assets/db/props_is_spec.csv',
         '家具礼物': './assets/db/home_is_gift.csv',
         '家具非礼物': './assets/db/home_not_gift.csv',
         '食物礼物': './assets/db/foods_is_gift.csv',
@@ -521,7 +524,8 @@
         '家装': ['家具礼物', '家具非礼物'],
         '食物': ['食物礼物', '食物非礼物'],
         '物料': ['物料'],
-        '重要物品': ['重要物品']
+        '重要物品': ['重要物品'],
+        '特殊道具': ['特殊道具']
     };
 
     const FILTER_CONFIGS = {
@@ -588,7 +592,7 @@
                     '鱼类道具': ['养鱼道具', '捕鱼道具'],
                     '养成材料': ['经验', '角色突破', '异能升级', '弧盘突破', '空幕卡带', '自选箱'],
                     '异象家具材料': [],
-                    '代币': ['货币', '代币', '兑换券', '折扣券'],
+                    '代币': ['代币', '兑换券', '折扣券'],
                     '礼物': [],
                     '其他': ['自选箱','遗失物', '活力', '好感', '角色获取'],
                 }
@@ -596,9 +600,24 @@
             { id: '适用角色', name: '适用角色', type: 'character_select' },
             { id: '标签', name: '其他', type: 'tags', options: ['可购买', '可拾取', '可刷取', '特殊获取', '不可再生','唯一'] }
         ],
+        '特殊道具': [
+            { id: '稀有度', name: '稀有度', type: 'rarity_tags', options: ['绿', '蓝', '紫', '金'] },
+            { id: '类型', name: '类型', type: 'tags', options: ['货币', '角色', '社交', '常驻玩法', '限时玩法', '游戏设计'] },
+            { id: '子类型', name: '子类型', type: 'sub_tags', 
+                options: {
+                    '货币': ['限时','常驻'],
+                    '角色': ['角色卡', '服装' ,'常驻角色', '限定角色'],
+                    '社交': ['头像', '名片', '头像框', '称号' ,'其他'],
+                    '常驻玩法': ['海上钓客', '粉爪大劫案','九百九十九夜'],
+                    '限时玩法': ['即刻落槌','其他'],
+                    '游戏设计': ['体力','经验'],
+                }
+            },
+            { id: '标签', name: '其他', type: 'tags', options: ['不可再生','唯一'] }
+        ],
         '重要物品': [
             { id: '稀有度', name: '稀有度', type: 'rarity_tags', options: ['绿', '蓝', '紫', '金'] },
-            { id: '类别', name: '类别', type: 'tags', options: ['车钥匙', '快捷技能', '任务道具', '监狱道具', '粉爪道具', '抽卡道具'] },
+            { id: '类别', name: '类别', type: 'tags', options: ['车钥匙', '快捷道具', '任务道具', '抽卡', '监狱', '粉爪', '麻将', '钓鱼'] },
             { id: '标签', name: '其他', type: 'tags', options: ['不可再生','唯一'] }
         ]
     };
@@ -777,7 +796,7 @@
         currentMasterTab = tabName;
         activeFilters = {};
         document.querySelectorAll('#masterTabs .tab-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.innerText.includes(tabName));
+            btn.classList.toggle('active', btn.innerText.trim() === tabName);
         });
         renderDynamicFilters();
         applyFilterLogic();
