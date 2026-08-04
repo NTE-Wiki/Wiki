@@ -64,7 +64,7 @@
         }
 
         .sidebar {
-            flex: 0 0 320px;
+            flex: 0 0 348px;
             position: sticky;
             top: 20px;
             box-sizing: border-box;
@@ -104,7 +104,7 @@
             outline: none;
             box-sizing: border-box;
         }
-        .character-select, .food-series-select, .home-series-select {
+        .character-select, .food-series-select, .home-series-select, .bags-series-select {
             background: var(--input-bg);
             color: var(--text-color);
             border: 1px solid var(--input-border);
@@ -286,8 +286,11 @@
         .item-attr div { margin-bottom: 4px; white-space: pre-line; word-break: break-all; }
         
         .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-        .dot-绿 { background-color: #22c55e; } .dot-蓝 { background-color: #3b82f6; }
-        .dot-紫 { background-color: #a855f7; } .dot-金 { background-color: #eab308; }
+        .dot-灰 { background-color: #a3a4a4; } 
+        .dot-绿 { background-color: #22c55e; } 
+        .dot-蓝 { background-color: #3b82f6; }
+        .dot-紫 { background-color: #a855f7; } 
+        .dot-金 { background-color: #eab308; }
 
         /* 弹窗样式 */
         .modal-overlay {
@@ -456,12 +459,13 @@
                 <div class="master-tabs" id="masterTabs">
                     <button class="tab-btn active" onclick="switchMasterTab('全部')">全部</button>
                     <button class="tab-btn" onclick="switchMasterTab('礼物')">礼物</button>
-                    <button class="tab-btn" onclick="switchMasterTab('道具')">道具</button>
-                    <button class="tab-btn" onclick="switchMasterTab('特殊道具')">特殊道具</button>
                     <button class="tab-btn" onclick="switchMasterTab('食物')">食物</button>
                     <button class="tab-btn" onclick="switchMasterTab('家装')">家装</button>
+                    <button class="tab-btn" onclick="switchMasterTab('道具')">道具</button>
                     <button class="tab-btn" onclick="switchMasterTab('物料')">物料</button>
                     <button class="tab-btn" onclick="switchMasterTab('重要物品')">重要物品</button>
+                    <button class="tab-btn" onclick="switchMasterTab('特殊')">特殊</button>
+                    <button class="tab-btn" onclick="switchMasterTab('其他背包')">其他背包</button>
                     
                 </div>
 
@@ -514,7 +518,8 @@
         '食物礼物': './assets/db/foods_is_gift.csv',
         '食物非礼物': './assets/db/foods_not_gift.csv',
         '物料': './assets/db/pre_food.csv',
-        '重要物品': './assets/db/vip_items.csv'
+        '重要物品': './assets/db/vip_items.csv',
+        '其他背包': './assets/db/spec_bags.csv',
     };
 
     const CATEGORY_MAPPING = {
@@ -525,7 +530,8 @@
         '食物': ['食物礼物', '食物非礼物'],
         '物料': ['物料'],
         '重要物品': ['重要物品'],
-        '特殊道具': ['特殊道具']
+        '特殊': ['特殊道具'],
+        '其他背包': ['其他背包']
     };
 
     const FILTER_CONFIGS = {
@@ -544,7 +550,7 @@
         '家装': [
             { id: '稀有度', name: '稀有度', type: 'rarity_tags', options: ['灰', '绿', '蓝', '紫', '金'] },
             { id: '规格', name: '规格', type: 'size_tags', options: ['S', 'M', 'L'] },
-            { id: '类型', name: '类型', type: 'tags', options: ['家具', '园艺', '唱片机', '养鱼', '墙壁', '装饰', '手办','一咖舍'] },
+            { id: '类型', name: '类型', type: 'tags', options: ['家具', '园艺', '养鱼', '墙壁', '装饰', '手办', '唱片机', '一咖舍'] },
             { id: '子类型', name: '子类型', type: 'sub_tags', 
                 options: {
                     '家具': ['沙发', '椅子', '床', '桌子', '柜子', '屏风'],
@@ -614,22 +620,34 @@
             },
             { id: '标签', name: '其他', type: 'tags', options: ['可购买', '特殊获取', '唯一', '可拾取', '消耗品', '不可保留'] }
         ],
-        '特殊道具': [
+        '特殊': [
             { id: '稀有度', name: '稀有度', type: 'rarity_tags', options: ['绿', '蓝', '紫', '金'] },
-            { id: '类型', name: '类型', type: 'tags', options: ['货币', '角色', '社交', '外观', '载具', '海上钓客', '九百九十九夜', '其他玩法', '游戏设计'] },
+            { id: '类型', name: '类型', type: 'tags', options: ['货币', '游戏设计', '角色', '载具', '社交', '其他'] },
             { id: '子类型', name: '子类型', type: 'sub_tags', 
                 options: {
-                    '货币': ['货币', '活动代币', '常驻', '限时'],
+                    '货币': ['货币', '永久', '活动代币'],
                     '角色': ['角色卡', '服装', '常驻角色', '限定角色'],
+                    '载具': ['涂装', '引擎', '车体', '其他'],
                     '社交': ['头像', '名片', '头像框', '称号', '角色', '其他'],
-                    '游戏设计': ['体力', '经验', '其他'],
-                    '海上钓客': ['淡水鱼', '海水鱼' , '可饲养', '其他'],
-                    '九百九十九夜': ['武器', '上装', '下装', '鞋子', '护符', '采集物'],
-                    '其他玩法': ['粉爪大劫案', '噩梦缠身', '即刻落槌', '其他', '常驻', '限时']
+                    '游戏设计': ['活力类', '经验类', '养成材料', '奖励预览', '其他'],
                 }
             },
             { id: '适用角色', name: '适用角色', type: 'character_select' },
-            { id: '标签', name: '其他', type: 'tags', options: ['不可再生', '唯一'] }
+            { id: '标签', name: '其他', type: 'tags', options: ['不可再生', '唯一', '常驻', '限时'] }
+        ],
+        '其他背包': [
+            { id: '所属背包', name: '所属背包', type: 'bags_series_select' },
+            { id: '稀有度', name: '稀有度', type: 'rarity_tags', options: ['绿', '蓝', '紫', '金'] },
+            { id: '子类型', name: '子类型', type: 'sub_tags', 
+                options: {
+                    '海上钓客': ['货币', '积分', '淡水鱼', '海水鱼' , '可饲养', '其他'],
+                    '九百九十九夜': ['货币', '积分', '武器', '上装', '下装', '鞋子', '护符', '采集物', '其他'],
+                    '粉爪大劫案': ['货币', '积分', '门禁卡', '拾取物'],
+                    '噩梦缠身': ['门禁', '便捷条', '线索'],
+                    '即刻落槌': ['货币', '积分', '仪器', '拍品'],
+                }
+            },
+            { id: '标签', name: '其他', type: 'tags', options: ['货币', '积分', '常驻', '限时','不可再生', '唯一', '每局重置', '局外保留', '其他'] }
         ]
     };
 
@@ -640,6 +658,8 @@
     let homeseriesItem = new Set();
     let foodseriesList = new Set();
     let foodseriesItem = new Set();
+    let bagsseriesList = new Set();
+    let bagsseriesItem = new Set();
     let currentMasterTab = '全部';
     let searchQuery = '';
     let fallbackImg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 50 50'><rect width='50' height='50' fill='%23e0e0e0'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='10' fill='%23888888'>No Img</text></svg>";
@@ -722,6 +742,7 @@
         extractCharacters();
         extracthomeSeries();
         extractfoodSeries();
+        extractbagsSeries()
         switchMasterTab('全部');
     });
 
@@ -803,6 +824,12 @@
         });
     }
 
+    function extractbagsSeries() {
+        Object.values(allDatabaseData).flat().forEach(row => {
+            splitCellValues(row['所属背包']).forEach(s => bagsseriesItem.add(s));
+        });
+    }
+
     function switchMasterTab(tabName) {
         currentMasterTab = tabName;
         activeFilters = {};
@@ -824,15 +851,20 @@
 
             if (group.name === '子类型'| group.name === '加成类型') {
                 const selectedMainTypes = activeFilters['类型'] || [];
+                const selectedMainTypes2 = activeFilters['所属背包'] || [];
                 
                 // 如果未勾选任何“类型”，直接不渲染子类型这一行
-                if (selectedMainTypes.length === 0) return;
+                if (selectedMainTypes.length === 0 && selectedMainTypes2.length === 0) return;
 
                 // 根据选中的类型汇总所有可用的子类型（支持在“类型”中多选）
                 let matchedOptions = [];
                 selectedMainTypes.forEach(t => {
                     if (group.options[t]) matchedOptions.push(...group.options[t]);
                 });
+                selectedMainTypes2.forEach(t => {
+                    if (group.options[t]) matchedOptions.push(...group.options[t]);
+                });
+
 
                 // 去重
                 currentOptions = [...new Set(matchedOptions)];
@@ -904,8 +936,33 @@
                     applyFilterLogic();
                 };
                 tagsContainer.appendChild(select);
+            } else if (group.type === 'bags_series_select') {
+                const select = document.createElement('select');
+                select.className = 'bags-series-select';
+                let optionsSource = (group.id === '所属背包') ? bagsseriesItem : bagsseriesList;
+                select.innerHTML = `<option value="">未选择所属背包</option>` + 
+                    Array.from(optionsSource).map(c => `<option value="${c}" ${activeFilters[group.id] && activeFilters[group.id][0] === c ? 'selected' : ''}>${c}</option>`).join('');
+                
+                select.onchange = (e) => {
+                    const value = e.target.value;
+                    
+                    // 更新 activeFilters（单选，直接覆盖）
+                    if (value) {
+                        activeFilters[group.id] = [value];
+                    } else {
+                        delete activeFilters[group.id];
+                    }
+                    
+                    // 联动刷新子类型
+                    if (group.id === '所属背包') {
+                        cleanInvalidSubTypes();
+                        renderDynamicFilters();
+                    }
+                    
+                    applyFilterLogic();
+                };
+                tagsContainer.appendChild(select);
             }
-
             groupEl.appendChild(tagsContainer);
             container.appendChild(groupEl);
         });
@@ -936,10 +993,11 @@
         if (!activeFilters['子类型']) return;
 
         const selectedMainTypes = activeFilters['类型'] || [];
+        const selectedMainTypes2 = activeFilters['所属背包'] || [];
         const subConfig = (FILTER_CONFIGS[currentMasterTab] || []).find(g => g.id === '子类型');
 
         // 如果主类型被全部取消选择，或者找不到子类型配置，清空已选子类型
-        if (!subConfig || selectedMainTypes.length === 0) {
+        if (!subConfig || (selectedMainTypes.length === 0 && selectedMainTypes2.length === 0) ) {
             delete activeFilters['子类型'];
             return;
         }
@@ -947,6 +1005,9 @@
         // 汇总当前所有合法子类型选项
         let validSubOptions = [];
         selectedMainTypes.forEach(t => {
+            if (subConfig.options[t]) validSubOptions.push(...subConfig.options[t]);
+        });
+        selectedMainTypes2.forEach(t => {
             if (subConfig.options[t]) validSubOptions.push(...subConfig.options[t]);
         });
 
