@@ -553,7 +553,7 @@
             { id: '类型', name: '类型', type: 'tags', options: ['家具', '园艺', '养鱼', '墙壁', '装饰', '手办', '唱片机', '一咖舍'] },
             { id: '子类型', name: '子类型', type: 'sub_tags', 
                 options: {
-                    '家具': ['沙发', '椅子', '床', '桌子', '柜子', '屏风'],
+                    '家具': ['沙发', '椅子', '床', '桌子', '柜子', '屏风', '地毯'],
                     '园艺': ['花盆', '花瓶', '花架', '盆栽', '花艺', '耕种'],
                     '唱片机': [],
                     '养鱼': ['鱼缸', '鱼缸造景'],
@@ -1102,7 +1102,7 @@
             card.className = 'item-card';
             card.onclick = () => openModal(item);
 
-            const imgPath = `./assets/images/${item['名称']}.png`;
+            const imgPath = `./assets/images/${item['pics']}.png`;
 
             let attrHtml = '';
             if (currentMasterTab === '礼物') {
@@ -1145,7 +1145,7 @@
     }
 
     function openModal(item) {
-        const imgPath = `./assets/images/${item['名称']}.png`;
+        const imgPath = `./assets/images/${item['pics']}.png`;
         document.getElementById('modalImg').src = imgPath;
         document.getElementById('modalTitle').innerText = item['名称'] || '未命名';
         
